@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
                 height: double.infinity,
                 width: double.infinity,
                 decoration: kBackground,
-                padding: EdgeInsets.all(20.0),
+                padding: EdgeInsets.all(10.0),
                 child: Form(
                   key: formKey,
                   child: Column(
@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      SizedBox(height: 30.0),
+      SizedBox(height: 10.0),
       ],
     ),
     ];
@@ -195,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Text('Login', style: TextStyle(fontSize: 20.0)),
           onPressed: validateAndSubmit,
         ),
-        SizedBox(height: 10.0,),
+        
         FlatButton(
           child: Text('New User? Create an Account', style: TextStyle(fontSize: 15.0, color: Colors.white)),
           onPressed: moveToRegister,
@@ -208,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Text('Register', style: TextStyle(fontSize: 20.0)),
           onPressed: validateAndSubmit,
         ),
-        SizedBox(height: 10.0,),
+        
         FlatButton(
           child: Text('Already a user? Login', style: TextStyle(fontSize: 15.0, color: Colors.white)),
           onPressed: moveToLogin,
