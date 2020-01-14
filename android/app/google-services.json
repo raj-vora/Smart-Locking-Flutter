@@ -1,0 +1,119 @@
+{
+  "project_info": {
+    "project_number": "1094116189861",
+    "firebase_url": "https://hose-vodapav.firebaseio.com",
+    "project_id": "hose-vodapav",
+    "storage_bucket": "hose-vodapav.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094116189861:android:1424c8b84f3af21c210f4c",
+        "android_client_info": {
+          "package_name": "com.example.sls"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1094116189861-ssen65agq2br42a66rbkibffrj0p1vmr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDm0vQFiFj_J9hcoC-LlAkp97A5v462fCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1094116189861-ssen65agq2br42a66rbkibffrj0p1vmr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1094116189861-teinol7l6i75i271vjahv1ruvt1cjbfb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartLocking"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094116189861:android:729633582e6fb270210f4c",
+        "android_client_info": {
+          "package_name": "com.vodapav.login_demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1094116189861-ssen65agq2br42a66rbkibffrj0p1vmr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDm0vQFiFj_J9hcoC-LlAkp97A5v462fCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1094116189861-ssen65agq2br42a66rbkibffrj0p1vmr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1094116189861-teinol7l6i75i271vjahv1ruvt1cjbfb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartLocking"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094116189861:android:c9cb3e24fcab5a02210f4c",
+        "android_client_info": {
+          "package_name": "com.vodapav.smart_lock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1094116189861-ssen65agq2br42a66rbkibffrj0p1vmr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDm0vQFiFj_J9hcoC-LlAkp97A5v462fCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1094116189861-ssen65agq2br42a66rbkibffrj0p1vmr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1094116189861-teinol7l6i75i271vjahv1ruvt1cjbfb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartLocking"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
