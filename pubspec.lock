@@ -70,7 +70,28 @@ packages:
       name: firebase_auth
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.5.4"
+    version: "0.15.1"
+  firebase_auth_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_auth_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.5"
+  firebase_core:
+    dependency: transitive
+    description:
+      name: firebase_core
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.2+1"
+  firebase_core_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_core_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.2"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -94,7 +115,14 @@ packages:
       name: image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.11"
+    version: "2.1.12"
+  imei_plugin:
+    dependency: "direct main"
+    description:
+      name: imei_plugin
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.6"
   matcher:
     dependency: transitive
     description:
@@ -214,4 +242,4 @@ packages:
     version: "2.2.0"
 sdks:
   dart: ">=2.4.0 <3.0.0"
-  flutter: ">=0.1.4 <2.0.0"
+  flutter: ">=1.9.1+hotfix.5 <2.0.0"
