@@ -4,9 +4,9 @@ import 'package:smart_lock/auth.dart';
 import 'package:smart_lock/constants.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn});
+  LoginPage({this.auth, this.onSignedIn, this.register});
   final BaseAuth auth;
-  final VoidCallback onSignedIn;
+  final VoidCallback onSignedIn, register;
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -37,11 +37,13 @@ class _LoginPageState extends State<LoginPage> {
         if(_formType == FormType.login) {
           String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);
           print('Signed in: $userId');
+          widget.onSignedIn();
         } else{
           String userId = await widget.auth.createUserWithEmailAndPassword(_email, _password);
           print('Registered user: $userId');
+          widget.register();
         }
-        widget.onSignedIn();
+        
       }
       catch(e) {
         print('Error: $e');

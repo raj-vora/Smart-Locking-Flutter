@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/auth.dart';
-import 'package:imei_plugin/imei_plugin.dart';
 import 'package:smart_lock/constants.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,37 +22,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  String _platformImei = 'Unknown';
-  String uniqueId = "Unknown";
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformImei;
-    String idunique;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformImei = await ImeiPlugin.getImei( shouldShowRequestPermissionRationale: false );
-      idunique = await ImeiPlugin.getId();
-    } catch(e) {
-      platformImei = e;
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformImei = platformImei;
-      uniqueId = idunique;
-    });
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +51,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    Text('IMEI: $_platformImei\nDevice UniqueID: $uniqueId', style: TextStyle(fontSize: 20.0),),
+                    Text('Welcome', style: TextStyle(fontSize: 20.0),),
                   ],
                 ),
               )
