@@ -43,7 +43,6 @@ class _LoginPageState extends State<LoginPage> {
           print('Registered user: $userId');
           widget.register();
         }
-        
       }
       catch(e) {
         print('Error: $e');

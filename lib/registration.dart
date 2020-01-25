@@ -4,6 +4,7 @@ import 'package:smart_lock/auth.dart';
 import 'package:imei_plugin/imei_plugin.dart';
 import 'package:smart_lock/constants.dart';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Registration extends StatefulWidget {
   Registration({this.auth});
@@ -14,7 +15,7 @@ class Registration extends StatefulWidget {
 
 class _RegistrationState extends State<Registration> {
   final formKey = GlobalKey<FormState>();
-
+  final db = Firestore.instance;
   String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId;
   //String _platformImei = 'Unknown';
 
@@ -73,17 +74,23 @@ class _RegistrationState extends State<Registration> {
     return false;
   }
 
-  void sendChirp() {
+  void sendChirp() async {
     createUserId();
+    var json = {
+      'userId' : _userId,
+      'authId' : _authId,
+      'userSecret' : _userSecret,
+      'name' : _name,
+      'deviceId' : _deviceId,
+      'mobileNumber' : _mobileNumber,
+      'emailId' : _emailId,
+      'homeId' : _homeId
+    };
     if(validateAndSave()){
-      print('Name: $_name');
-      print('DeviceId: $_deviceId');
-      print('Number: $_mobileNumber');
-      print('AuthID: $_authId');
-      print('UserID: $_userId');
-      print('EmailID: $_emailId');
-      print('secret: $_userSecret');
-      print('home: $_homeId');
+      await db.collection('users').add(json).then((documentReference) {
+        print(json);
+        print(documentReference.documentID);
+      }).catchError((e) {print(e);});
     }
   }
 
