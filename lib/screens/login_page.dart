@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:smart_lock/auth.dart';
-import 'package:smart_lock/constants.dart';
+import 'package:smart_lock/constants/auth.dart';
+import 'package:smart_lock/constants/ui_constants.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({this.auth, this.onSignedIn, this.register});
@@ -22,17 +22,8 @@ class _LoginPageState extends State<LoginPage> {
   String _email, _password;
   FormType _formType = FormType.login;
   
-  bool validateAndSave() {
-    final form = formKey.currentState;
-    if(form.validate()) {
-      form.save();
-      return true;
-    }
-    return false;
-  }
-
   void validateAndSubmit() async {
-    if(validateAndSave()) {
+    if(widget.auth.validateAndSave(formKey)) {
       try{
         if(_formType == FormType.login) {
           String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);

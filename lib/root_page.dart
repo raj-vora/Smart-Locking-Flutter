@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:smart_lock/auth.dart';
-import 'package:smart_lock/home_page.dart';
-import 'package:smart_lock/login_page.dart';
-import 'package:smart_lock/registration.dart';
+import 'package:smart_lock/constants/auth.dart';
+import 'package:smart_lock/screens/home_page.dart';
+import 'package:smart_lock/screens/login_page.dart';
+import 'package:smart_lock/screens/registration.dart';
 import 'package:local_auth/local_auth.dart';
 
 class RootPage extends StatefulWidget {

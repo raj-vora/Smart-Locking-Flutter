@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smart_lock/auth.dart';
+import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/root_page.dart';
 
 void main() {
