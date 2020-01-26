@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/screens/home_page.dart';
@@ -31,6 +34,13 @@ class _RootPageState extends State<RootPage> {
         authStatus = userId == null ? AuthStatus.notSignedIn : AuthStatus.signedIn;
       });
     });
+  }
+  String _authId, _userId, _deviceId, _currentDeviceId;
+  void getUserAndDeviceId() async {
+    _authId = await widget.auth.currentUser();
+    sleep(Duration(milliseconds: 500));
+    Firestore.instance.collection('users').where("authId", isEqualTo: _authId).snapshots().listen((data) => data.documents.forEach((f) => _deviceId = f['deviceId']));
+    _currentDeviceId = await widget.auth.getDeviceId();
   }
 
   void _signedIn() {
@@ -88,19 +98,20 @@ class _RootPageState extends State<RootPage> {
           register: _register,
         );
       case AuthStatus.signedIn:
-        //if(authenticated) {
+        if(_deviceId == _currentDeviceId){
           return HomePage(
             auth: widget.auth,
             onSignedOut: _signedOut,
           );
-        /*}else{
-          return LoginPage(
-          auth: widget.auth,
-          onSignedIn: _signedIn,
-          register: _register,
-        );
         }
-        break;*/
+        else{
+          return LoginPage(
+            auth: widget.auth,
+            onSignedIn: _signedIn,
+            register: _register,
+          );
+        }
+        break;
       case AuthStatus.register:
         return Registration(
           auth: widget.auth,

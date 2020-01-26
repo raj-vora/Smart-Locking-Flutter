@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _authId, _userId, _userSecret, _userName, _homeId, _hashedSecret;
+  String _authId, _userId, _userSecret, _userName, _homeId, _deviceId, _currentDeviceId;
   List<String> homes = ['1'];
   final db = Firestore.instance;
 
@@ -36,12 +36,20 @@ class _HomePageState extends State<HomePage> {
       db.collection('users').where("authId", isEqualTo: _authId).snapshots().listen((data) => data.documents.forEach((f) {
         _userId = f['userId'];
         _userName = f['name'];
+        _deviceId = f['deviceId'];
       }));
+      _currentDeviceId = await widget.auth.getDeviceId();
+      if(_deviceId == _currentDeviceId){
+        widget.auth.createToast('User already logged in on another device');
+        await widget.auth.signOut();
+        widget.onSignedOut();
+      }
       db.collection('users').document(_userId).collection('homes').getDocuments().then((QuerySnapshot snapshot) {
         snapshot.documents.forEach((f) => homes.add(f.documentID));
       });
       print(homes);
       _homeId = homes.first;
+      
     } catch (e) {
       print(e);
     }
