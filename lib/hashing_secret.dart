@@ -12,7 +12,5 @@ String hashSecret (String _userSecret) {
     var hmacSha1 = new Hmac(sha1, key); // HMAC-SHA1
     var digest = hmacSha1.convert(secret);
     
-    print("HMAC digest as bytes: ${digest.bytes}");
-    print("HMAC digest as hex string: $digest");
     return digest.toString().substring(1,16);
   }

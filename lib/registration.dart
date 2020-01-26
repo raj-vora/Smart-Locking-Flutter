@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/auth.dart';
@@ -7,15 +8,15 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:async';
 import 'dart:typed_data';
 import 'package:chirp_flutter/chirp_flutter.dart';
 import 'package:smart_lock/hashing_secret.dart';
 import 'dart:convert';
 
 class Registration extends StatefulWidget {
-  Registration({this.auth});
+  Registration({this.auth,this.onSignedIn});
   final BaseAuth auth;
+  final VoidCallback onSignedIn;
   @override
   _RegistrationState createState() => _RegistrationState();
 }
@@ -86,8 +87,6 @@ class _RegistrationState extends State<Registration> {
     _userSecret = secret;
   }
 
-  
-
   bool validateAndSave() {
     final form = formKey.currentState;
     if(form.validate()) {
@@ -99,24 +98,24 @@ class _RegistrationState extends State<Registration> {
 
   void sendChirp() async {
     createUserId();
+    sleep(Duration(seconds: 1));
     String hashedSecret = hashSecret(_userSecret);
     String payload ='r' + _userId + hashedSecret;
     Uint8List _chirpData = utf8.encode(payload);
     var json = {
       'userId' : _userId,
       'authId' : _authId,
-      'userSecret' : _userSecret,
       'name' : _name,
       'deviceId' : _deviceId,
       'mobileNumber' : _mobileNumber,
       'emailId' : _emailId,
-      'homeId' : _homeId
     };
     if(validateAndSave()){
       try {
-        await db.collection('users').add(json).then((documentReference) {
-          print(documentReference.documentID);
+        await db.collection('users').document(_userId).setData(json).then((documentReference) {
+          print('entered in firestore at $_userId');
         }).catchError((e) {print(e);});
+        db.collection('users').document(_userId).collection('homes').document(_homeId).setData({'secret':_userSecret,'homeId':_homeId});
         await ChirpSDK.start();
         await ChirpSDK.send(_chirpData);
         print(_chirpData);
@@ -138,15 +137,14 @@ class _RegistrationState extends State<Registration> {
 
   void goToHome() async {
     await ChirpSDK.stop();
-    Fluttertoast.showToast(
-          msg: "SDK Stopped",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIos: 3,
-          backgroundColor: Colors.white,
-          textColor: Colors.black,
-          fontSize: 16.0
-        );
+    List occupants=[];
+    await db.collection('homes').document(_homeId).collection('occupants').getDocuments().then((QuerySnapshot snapshot) {
+      snapshot.documents.forEach((f) => occupants.add(f.documentID));
+    });
+    if(occupants.contains(_userId)){
+      print('user registered');
+      widget.onSignedIn();
+    }
   }
   
   @override
