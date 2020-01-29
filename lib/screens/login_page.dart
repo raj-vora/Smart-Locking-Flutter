@@ -55,6 +55,13 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  void forgotPassword() {
+    final form = formKey.currentState;
+    form.save();
+    widget.auth.resetPassword(_email);
+    widget.auth.createToast('Password Reset Mail Sent');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,14 +114,10 @@ class _LoginPageState extends State<LoginPage> {
 
   List<Widget> buildInputs() {
     return[
+      SizedBox(height: 20.0,),
       Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Email',
-          style: kLabelStyle,
-        ),
-        SizedBox(height: 10.0),
         Container(
           alignment: Alignment.centerLeft,
           decoration: kBoxDecorationStyle,
@@ -145,11 +148,6 @@ class _LoginPageState extends State<LoginPage> {
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Password',
-          style: kLabelStyle,
-        ),
-        SizedBox(height: 10.0),
         Container(
           alignment: Alignment.centerLeft,
           decoration: kBoxDecorationStyle,
@@ -182,12 +180,20 @@ class _LoginPageState extends State<LoginPage> {
   List<Widget> buildSubmitButtons() {
     if(_formType == FormType.login){
       return [
-        SizedBox(height: 20.0,),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            FlatButton(
+              child: Text('Forgot Password?', style: TextStyle(fontSize: 15.0, color: Colors.white)),
+              onPressed: forgotPassword,  
+            ),
+          ],
+        ),
         RaisedButton(
           child: Text('Login', style: TextStyle(fontSize: 20.0)),
           onPressed: validateAndSubmit,
         ),
-        
         FlatButton(
           child: Text('New User? Create an Account', style: TextStyle(fontSize: 15.0, color: Colors.white)),
           onPressed: moveToRegister,

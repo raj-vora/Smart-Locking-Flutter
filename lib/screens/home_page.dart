@@ -1,11 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
-import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   HomePage({this.auth, this.onSignedOut});
@@ -17,42 +16,68 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _authId, _userId, _userSecret, _userName, _homeId, _deviceId, _currentDeviceId;
-  List<String> homes = ['1'];
+  String _userId, _userName='User', _homeId;
+  List<String> homes = [];
   final db = Firestore.instance;
+  final LocalAuthentication localAuth = LocalAuthentication();
+  bool authenticated = false;
+  bool _unlockbuttondisabled = false;
 
   @override
   void initState() {
     super.initState();
     getInfo();
-    sleep(Duration(milliseconds: 500));
     widget.auth.requestPermissions();
     widget.auth.initChirp();
+    _unlockbuttondisabled = false;
   }
 
-  Future<void> getInfo() async {
+  void getInfo() async {
+    String loginid, userid, name, phoneid, currentphoneid;
+    List<String> homestemp=[];
     try {
-      _authId = await widget.auth.currentUser();
-      db.collection('users').where("authId", isEqualTo: _authId).snapshots().listen((data) => data.documents.forEach((f) {
-        _userId = f['userId'];
-        _userName = f['name'];
-        _deviceId = f['deviceId'];
-      }));
-      _currentDeviceId = await widget.auth.getDeviceId();
-      if(_deviceId == _currentDeviceId){
-        widget.auth.createToast('User already logged in on another device');
-        await widget.auth.signOut();
-        widget.onSignedOut();
+      Firestore.instance.settings(persistenceEnabled: true);
+      bool canCheckBiometrics = await localAuth.canCheckBiometrics;
+      if(canCheckBiometrics) {
+        var localAuth = LocalAuthentication();
+        authenticated = await localAuth.authenticateWithBiometrics(localizedReason: 'Please authenticate to continue');
+        if(!authenticated){
+          _signOut();
+        }
       }
-      db.collection('users').document(_userId).collection('homes').getDocuments().then((QuerySnapshot snapshot) {
-        snapshot.documents.forEach((f) => homes.add(f.documentID));
+      loginid = await widget.auth.currentUser();
+      await db.collection('users').getDocuments().then((snapshot){
+        snapshot.documents.forEach((f){
+          if(f['authId']==loginid){
+            userid = f['userId'];
+            name = f['name'];
+            phoneid = f['deviceId'];
+          }else{
+            print('user not found');
+          }
+        });
       });
-      print(homes);
-      _homeId = homes.first;
-      
+      currentphoneid = await widget.auth.getDeviceId();
+      if(currentphoneid != phoneid){
+        widget.auth.createToast('User already logged in on another device');
+        _signOut();
+      }
+      await db.document('users/$userid').collection('homes').getDocuments().then((snapshot) {
+        snapshot.documents.forEach((f) {
+          homestemp.add(f.documentID);
+        });
+      });
     } catch (e) {
       print(e);
     }
+    setState(() {
+      _userId = userid;
+      _userName = name;
+      if(homestemp.isNotEmpty){
+        homes.addAll(homestemp);
+        _homeId = homes.first;
+      }
+    });
   }
 
   void _signOut() async {
@@ -64,14 +89,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
   
-  void unlockDoor() {
-    /*temp = db.collection('users').document(_userId).collection('homes').snapshots().listen((snapshot) {
-      snapshot.documents.forEach((f) => debugPrint(f.data.toString()));
-    });*/
-    db.collection('users').document(_userId).collection('homes').where('homeId', isEqualTo: _homeId).snapshots().listen((data) => data.documents.forEach((f) {
-      _userSecret = f['secret'];
-    }));
-    sleep(Duration(milliseconds: 500));
+  void unlockDoor() async{
+    String _userSecret;
+    Firestore.instance.settings(persistenceEnabled: true);
+    await db.document("users/$_userId/homes/$_homeId").get().then((snapshot){
+      _userSecret = snapshot['secret'];
+    });
     Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'normal');
     widget.auth.sendChirp(_chirpData);
   }
@@ -118,7 +141,6 @@ class _HomePageState extends State<HomePage> {
                           onChanged: (String value) {
                             setState(() {
                               _homeId = value;
-                              print(_homeId);
                             });
                           },
                           items: homes
@@ -134,7 +156,8 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(height: 50,),
                     RaisedButton(
                       child: Text('Unlock Door'),
-                      onPressed: unlockDoor,
+                      onPressed: _unlockbuttondisabled ? null : unlockDoor,
+                      
                     )
                   ],
                 ),

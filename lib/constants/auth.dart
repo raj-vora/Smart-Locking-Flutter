@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:imei_plugin/imei_plugin.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:chirp_flutter/chirp_flutter.dart';
@@ -18,22 +19,28 @@ abstract class BaseAuth {
   Future<String> createUserWithEmailAndPassword(String email, String password);
   Future<String> currentUser();
   Future<String> getEmailId();
+  Future<void> resetPassword(String _emailId);
   Future<void> signOut();
+  
   //FORM VALIDATION FUNCTION
   bool validateAndSave(formKey);
+  
   //CHIRP FUNCTIONS
   Future<void> requestPermissions();
   Future<void> initChirp();
   Uint8List createChirp(String _userId, String _userSecret, String mode);
   Future<void> sendChirp(Uint8List _chirpData);
+  
   //REGISTRATION FUNCTION
   Future<List> initRegistration();
   Future<String> getDeviceId();
   List createUserId();
   void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData);
   Future<bool> registerCheck(String _homeId, String _userId);
+  
   //BOTTOM TOAST
   void createToast(String message);
+  
   //HASHING FUNCTION
   String hashSecret (String _userSecret);
 }
@@ -44,7 +51,12 @@ class Auth implements BaseAuth{
 
   //FIREBASE FUNCTIONS
   Future<String> signInWithEmailAndPassword(String email, String password) async {
-    FirebaseUser user = (await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password)).user;
+    FirebaseUser user;
+    try {
+    user = (await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password)).user;
+    }on PlatformException{
+      createToast('User does\'t exist');
+    }
     return user.uid;
   }
 
@@ -55,7 +67,7 @@ class Auth implements BaseAuth{
 
   Future<String> currentUser() async {
     FirebaseUser user = await _firebaseAuth.currentUser();
-    return user.uid;
+    return user != null ? user.uid : null;
   }
 
   Future<String> getEmailId() async {
@@ -63,18 +75,12 @@ class Auth implements BaseAuth{
     return user.email;
   }
 
-  Future<void> signOut() async {
-    return _firebaseAuth.signOut();
+  Future<void> resetPassword(String _emailId) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: _emailId);
   }
 
-  //FORM VALIDATION FOR REGISTRATION AND LOGIN PAGES
-  bool validateAndSave(formKey) {
-    final form = formKey.currentState;
-      if(form.validate()) {
-        form.save();
-        return true;
-      }
-      return false;
+  Future<void> signOut() async {
+    return _firebaseAuth.signOut();
   }
 
   //CHIRP FUNCTIONS
@@ -117,6 +123,7 @@ class Auth implements BaseAuth{
 
   //REGISTRATION FUNCTIONS
   Future<List> initRegistration() async{
+    Firestore.instance.settings(persistenceEnabled: true);
     String idunique, user, email;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
@@ -131,7 +138,8 @@ class Auth implements BaseAuth{
   }
 
   Future<String> getDeviceId() async{
-  return await ImeiPlugin.getId();
+  String deviceId = await ImeiPlugin.getId();
+  return deviceId;
   }
 
   List createUserId() {
@@ -150,12 +158,11 @@ class Auth implements BaseAuth{
     return [id, secret];
   }
 
-  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData) {
+  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData) async{
     try {
-      db.collection('users').document(_userId).setData(json).then((documentReference) {
-        print('entered in firestore at $_userId');
-      }).catchError((e) {print(e);});
-      db.collection('users').document(_userId).collection('homes').document(_homeId).setData({'secret':_userSecret,'homeId':_homeId});
+      await db.collection('users').document(_userId).setData(json);
+      await db.document('users/$_userId/homes/$_homeId').setData({'secret':_userSecret,'homeId':_homeId});
+      await db.document('homes/$_homeId/occupants/$_userId').setData({'secret':_userSecret,'userId':_userId});
       sendChirp(_chirpData);
     }catch (e) {
       print(e);
@@ -163,6 +170,7 @@ class Auth implements BaseAuth{
   }
 
   Future<bool> registerCheck(String _homeId, String _userId) async {
+    Firestore.instance.settings(persistenceEnabled: true);
     List occupants=[];
     sleep(Duration(seconds: 1)); 
     await db.collection('homes').document(_homeId).collection('occupants').getDocuments().then((QuerySnapshot snapshot) {
@@ -173,6 +181,17 @@ class Auth implements BaseAuth{
     return true;
     }
     return false;
+  }
+
+  //FORM VALIDATION FOR REGISTRATION AND LOGIN PAGES
+  bool validateAndSave(formKey) {
+    final form = formKey.currentState;
+      if(form.validate()) {
+        form.save();
+        print('Form Saved');
+        return true;
+      }
+      return false;
   }
 
   //BOTTOM TOAST
@@ -188,6 +207,7 @@ class Auth implements BaseAuth{
     );
   }
 
+  //CREATE HASHED USERSECRET
   String hashSecret (String _userSecret) {
     var temp = new DateTime.now().millisecondsSinceEpoch;
     double time = temp/100000;

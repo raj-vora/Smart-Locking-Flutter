@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 import 'dart:typed_data';
-import 'dart:convert';
-
 class Registration extends StatefulWidget {
   Registration({this.auth,this.onSignedIn});
   final BaseAuth auth;
@@ -18,6 +16,7 @@ class _RegistrationState extends State<Registration> {
   final formKey = GlobalKey<FormState>();
   String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId;
   Map<String, String> json;
+
   @override
   void initState() {
     super.initState();
@@ -37,7 +36,7 @@ class _RegistrationState extends State<Registration> {
   }
 
   void createJson() {
-    json = {
+    json = <String, String>{
       'userId' : _userId,
       'authId' : _authId,
       'name' : _name,
@@ -51,10 +50,9 @@ class _RegistrationState extends State<Registration> {
     List user = widget.auth.createUserId();
     _userId = user[0];
     _userSecret = user[1];
-    createJson();
-    Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'register');
-    
     if(widget.auth.validateAndSave(formKey)){
+      createJson();
+      Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'register');
       widget.auth.registerUser(_userId, _userSecret, _homeId, json, _chirpData);
     }
   }
@@ -88,7 +86,6 @@ class _RegistrationState extends State<Registration> {
                 child: Form(
                   key: formKey,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: logo() + buildInputs() + buildButtons()
                   ),
@@ -111,7 +108,7 @@ class _RegistrationState extends State<Registration> {
         style: TextStyle(
           color: Colors.white,
           fontFamily: 'OpenSans',
-          fontSize: 40.0,
+          fontSize: 20.0,
           fontWeight: FontWeight.bold,
         ),
       ),
