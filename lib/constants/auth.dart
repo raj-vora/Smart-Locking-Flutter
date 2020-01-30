@@ -35,7 +35,8 @@ abstract class BaseAuth {
   Future<List> initRegistration();
   Future<String> getDeviceId();
   List createUserId();
-  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData, String _homeName);
+  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData);
+  void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData);
   Future<bool> registerCheck(String _homeId, String _userId);
   
   //BOTTOM TOAST
@@ -48,10 +49,10 @@ abstract class BaseAuth {
 class Auth implements BaseAuth{
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final db = Firestore.instance;
+  FirebaseUser user;
 
   //FIREBASE FUNCTIONS
   Future<String> signInWithEmailAndPassword(String email, String password) async {
-    FirebaseUser user;
     try {
     user = (await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password)).user;
     }on PlatformException{
@@ -61,17 +62,21 @@ class Auth implements BaseAuth{
   }
 
   Future<String> createUserWithEmailAndPassword(String email, String password) async {
-    FirebaseUser user = (await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password)).user;
+    try {
+    user = (await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password)).user;
+    } on PlatformException{
+      createToast('User already registered, please sign in');
+    }
     return user.uid;
   }
 
   Future<String> currentUser() async {
-    FirebaseUser user = await _firebaseAuth.currentUser();
+    user = await _firebaseAuth.currentUser();
     return user != null ? user.uid : null;
   }
 
   Future<String> getEmailId() async {
-    FirebaseUser user = await _firebaseAuth.currentUser();
+    user = await _firebaseAuth.currentUser();
     return user.email;
   }
 
@@ -124,17 +129,27 @@ class Auth implements BaseAuth{
   //REGISTRATION FUNCTIONS
   Future<List> initRegistration() async{
     Firestore.instance.settings(persistenceEnabled: true);
-    String idunique, user, email;
+    String idunique, user, email, name, mobilenumber, userid;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      //platformImei = await ImeiPlugin.getImei( shouldShowRequestPermissionRationale: false );
       idunique = await getDeviceId();
       user  = await currentUser();
       email = await getEmailId();
+      await db.collection('users').getDocuments().then((snapshot){
+        snapshot.documents.forEach((f){
+          if(f['authId']==user){
+            userid = f['userId'];
+            name = f['name'];
+            mobilenumber = f['mobileNumber'];
+          }else{
+            print('user not found');
+          }
+        });
+      });
     } catch(e) {
       print(e);
     }
-    return [idunique, user, email];
+    return [idunique, user, email, name, mobilenumber, userid];
   }
 
   Future<String> getDeviceId() async{
@@ -158,12 +173,28 @@ class Auth implements BaseAuth{
     return [id, secret];
   }
 
-  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData, String _homeName) async{
+  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData) async{
     try {
       await db.collection('users').document(_userId).setData(json);
       await db.document('users/$_userId/homes/$_homeId').setData({
         'secret':_userSecret,
         'homeId':_homeId,
+        'homeName': _homeName
+      });
+      await db.document('homes/$_homeId/occupants/$_userId').setData({
+        'secret':_userSecret,
+        'userId':_userId
+      });
+      sendChirp(_chirpData);
+    }catch (e) {
+      print(e);
+    }
+  }
+
+  void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData) async{
+    try {
+      await db.document('users/$_userId/homes/$_homeId').setData({
+        'secret':_userSecret,
         'homeName': _homeName
       });
       await db.document('homes/$_homeId/occupants/$_userId').setData({

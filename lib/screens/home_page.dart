@@ -7,10 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
 
 class HomePage extends StatefulWidget {
-  HomePage({this.auth, this.onSignedOut});
+  HomePage({this.auth, this.onSignedOut, this.registerHome});
   final BaseAuth auth;
   final VoidCallback onSignedOut;
-
+  final VoidCallback registerHome;
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -109,6 +109,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void addHome() {
+    widget.registerHome();
     print('Clicked add Home');
   }
 
@@ -142,6 +143,15 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      floatingActionButton: Container(
+        padding: EdgeInsets.only(right: 10.0, bottom: 10.0),
+        child: FloatingActionButton(
+          onPressed: addHome,
+          tooltip: 'Add Home',
+          child: Icon(Icons.add, color: Colors.black,),
+          backgroundColor: Colors.white,
+        ),
+      ),
     );
   }
 
@@ -166,6 +176,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Widget> selectHome() {
+    if(homes.isNotEmpty){
+      return[
+        SizedBox(height: 50.0,),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Select home:',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+            DropdownButton<String>(
+              value: _homeName,
+              icon: Icon(Icons.home),
+              iconSize: 24,
+              elevation: 16,
+              iconEnabledColor:Colors.black,
+              onChanged: (String value) {
+                setState(() {
+                  _homeName = value;
+                });
+              },
+              items: homeNames
+                .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(
+                    value,
+                    style: TextStyle(),
+                    ),
+                ); 
+              }).toList(),
+            ),
+          ],
+        ),
+      ];
+    }
     return[
       SizedBox(height: 50.0,),
       Row(
@@ -175,32 +226,12 @@ class _HomePageState extends State<HomePage> {
           Text(
             'Select home:',
             style: TextStyle(
-              color: Colors.white
+              color: Colors.white,
+              fontSize: 20.0
             ),
           ),
-          DropdownButton<String>(
-            value: _homeName,
-            icon: Icon(Icons.home),
-            iconSize: 24,
-            elevation: 16,
-            onChanged: (String value) {
-              setState(() {
-                _homeName = value;
-              });
-            },
-            items: homeNames
-              .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(
-                  value,
-                  style: TextStyle(color: Colors.white),
-                  ),
-              ); 
-            }).toList(),
-          ),
         ],
-      ),
+      )
     ];
   }
 
@@ -211,11 +242,6 @@ class _HomePageState extends State<HomePage> {
         child: Text('Unlock Door'),
         onPressed: _unlockbuttondisabled ? null : unlockDoor,                      
       ),
-      FloatingActionButton(
-        onPressed: addHome,
-        tooltip: 'Add Home',
-        child: Icon(Icons.add)
-      )
     ];
   }
 

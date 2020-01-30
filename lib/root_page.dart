@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/screens/home_page.dart';
 import 'package:smart_lock/screens/login_page.dart';
+import 'package:smart_lock/screens/register_home.dart';
 import 'package:smart_lock/screens/registration_page.dart';
 
 class RootPage extends StatefulWidget {
@@ -15,7 +16,8 @@ class RootPage extends StatefulWidget {
 enum AuthStatus {
   signedIn,
   notSignedIn,
-  register
+  register,
+  registerHome
 }
 
 class _RootPageState extends State<RootPage> {
@@ -52,6 +54,12 @@ class _RootPageState extends State<RootPage> {
     });
   }
 
+  void _registerHome() {
+    setState(() {
+      authStatus = AuthStatus.registerHome;
+    });
+  }
+
   //RENDER RELEVANT PAGE BASED ON AUTHSTATUS
   @override
   Widget build(BuildContext context) {
@@ -66,11 +74,17 @@ class _RootPageState extends State<RootPage> {
         return HomePage(
           auth: widget.auth,
           onSignedOut: _signedOut,
+          registerHome: _registerHome,
         );
       case AuthStatus.register:
         return Registration(
           auth: widget.auth,
           onSignedIn: _signedIn,
+        );
+      case AuthStatus.registerHome:
+        return RegisterHome(
+          auth: widget.auth,
+          onSignedIn: _signedIn
         );
     }
   }
