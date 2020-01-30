@@ -16,8 +16,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _userId, _userName='User', _homeId;
-  List<String> homes = [];
+  String _userId, _userName='User', _homeId, _homeName;
+  Map<String, String> homes={};
+  dynamic homeIds, homeNames;
   final db = Firestore.instance;
   final LocalAuthentication localAuth = LocalAuthentication();
   bool authenticated = false;
@@ -34,7 +35,7 @@ class _HomePageState extends State<HomePage> {
 
   void getInfo() async {
     String loginid, userid, name, phoneid, currentphoneid;
-    List<String> homestemp=[];
+    Map<String,String> homestemp={};
     try {
       Firestore.instance.settings(persistenceEnabled: true);
       bool canCheckBiometrics = await localAuth.canCheckBiometrics;
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> {
       }
       await db.document('users/$userid').collection('homes').getDocuments().then((snapshot) {
         snapshot.documents.forEach((f) {
-          homestemp.add(f.documentID);
+          homestemp[f.documentID] = f['homeName'];
         });
       });
     } catch (e) {
@@ -75,7 +76,10 @@ class _HomePageState extends State<HomePage> {
       _userName = name;
       if(homestemp.isNotEmpty){
         homes.addAll(homestemp);
-        _homeId = homes.first;
+        homeIds = homes.keys;
+        homeNames = homes.values;
+        _homeName = homeNames.first;
+        print('Homeid $homeIds; homename $homeNames');
       }
     });
   }
@@ -92,11 +96,20 @@ class _HomePageState extends State<HomePage> {
   void unlockDoor() async{
     String _userSecret;
     Firestore.instance.settings(persistenceEnabled: true);
+    homes.forEach((k,v) {
+      if(v == _homeName){
+        _homeId = k;
+      }
+    });
     await db.document("users/$_userId/homes/$_homeId").get().then((snapshot){
       _userSecret = snapshot['secret'];
     });
     Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'normal');
     widget.auth.sendChirp(_chirpData);
+  }
+
+  void addHome() {
+    print('Clicked add Home');
   }
 
   @override
@@ -118,48 +131,11 @@ class _HomePageState extends State<HomePage> {
           child: Stack(
             children: <Widget>[
               Container(
-                height: double.infinity,
-                width: double.infinity,
                 decoration: kBackground,
                 padding: EdgeInsets.all(10.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Text('Welcome $_userName', style: TextStyle(fontSize: 20.0),),
-                    SizedBox(height: 50,),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Text('Select home:'),
-                        DropdownButton<String>(
-                          value: _homeId,
-                          icon: Icon(Icons.home),
-                          iconSize: 24,
-                          elevation: 16,
-                          onChanged: (String value) {
-                            setState(() {
-                              _homeId = value;
-                            });
-                          },
-                          items: homes
-                            .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            ); 
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 50,),
-                    RaisedButton(
-                      child: Text('Unlock Door'),
-                      onPressed: _unlockbuttondisabled ? null : unlockDoor,
-                      
-                    )
-                  ],
+                  children: userName() + selectHome() + homeButtons()
                 ),
               )
             ],
@@ -168,4 +144,79 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  List<Widget> userName() {
+    return[
+      SizedBox(height: 20.0,),
+      Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'Welcome $_userName',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'OpenSans',
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> selectHome() {
+    return[
+      SizedBox(height: 50.0,),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'Select home:',
+            style: TextStyle(
+              color: Colors.white
+            ),
+          ),
+          DropdownButton<String>(
+            value: _homeName,
+            icon: Icon(Icons.home),
+            iconSize: 24,
+            elevation: 16,
+            onChanged: (String value) {
+              setState(() {
+                _homeName = value;
+              });
+            },
+            items: homeNames
+              .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(
+                  value,
+                  style: TextStyle(color: Colors.white),
+                  ),
+              ); 
+            }).toList(),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> homeButtons() {
+    return[
+      SizedBox(height: 100,),
+      RaisedButton(
+        child: Text('Unlock Door'),
+        onPressed: _unlockbuttondisabled ? null : unlockDoor,                      
+      ),
+      FloatingActionButton(
+        onPressed: addHome,
+        tooltip: 'Add Home',
+        child: Icon(Icons.add)
+      )
+    ];
+  }
+
 }

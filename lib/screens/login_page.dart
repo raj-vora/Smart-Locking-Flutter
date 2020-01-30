@@ -72,16 +72,18 @@ class _LoginPageState extends State<LoginPage> {
           child: Stack(
             children: <Widget>[
               Container(
-                height: double.infinity,
-                width: double.infinity,
                 decoration: kBackground,
-                padding: EdgeInsets.all(10.0),
+                padding: EdgeInsets.only(left: 10.0,right: 10.0,top: 10.0),
                 child: Form(
                   key: formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: logo() + buildInputs() + buildSubmitButtons()
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: logo() + buildInputs() + buildSubmitButtons()
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -102,11 +104,10 @@ class _LoginPageState extends State<LoginPage> {
         style: TextStyle(
           color: Colors.white,
           fontFamily: 'OpenSans',
-          fontSize: 40.0,
+          fontSize: 50.0,
           fontWeight: FontWeight.bold,
         ),
       ),
-      SizedBox(height: 10.0),
       ],
     ),
     ];
@@ -114,10 +115,19 @@ class _LoginPageState extends State<LoginPage> {
 
   List<Widget> buildInputs() {
     return[
-      SizedBox(height: 20.0,),
+      SizedBox(height: 40.0,),
       Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        Text(
+          'Email',
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 10.0,),
         Container(
           alignment: Alignment.centerLeft,
           decoration: kBoxDecorationStyle,
@@ -144,10 +154,19 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ],
     ),
-    SizedBox(height: 20.0,),
+    SizedBox(height: 30.0,),
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        Text(
+          'Password',
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 10.0,),
         Container(
           alignment: Alignment.centerLeft,
           decoration: kBoxDecorationStyle,

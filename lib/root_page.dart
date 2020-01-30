@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/screens/home_page.dart';
 import 'package:smart_lock/screens/login_page.dart';
-import 'package:smart_lock/screens/registration.dart';
+import 'package:smart_lock/screens/registration_page.dart';
 
 class RootPage extends StatefulWidget {
   RootPage({this.auth});

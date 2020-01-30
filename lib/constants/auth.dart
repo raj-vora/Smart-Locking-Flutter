@@ -35,7 +35,7 @@ abstract class BaseAuth {
   Future<List> initRegistration();
   Future<String> getDeviceId();
   List createUserId();
-  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData);
+  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData, String _homeName);
   Future<bool> registerCheck(String _homeId, String _userId);
   
   //BOTTOM TOAST
@@ -158,11 +158,18 @@ class Auth implements BaseAuth{
     return [id, secret];
   }
 
-  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData) async{
+  void registerUser(String _userId, String _userSecret, String _homeId, Map<String, String> json, Uint8List _chirpData, String _homeName) async{
     try {
       await db.collection('users').document(_userId).setData(json);
-      await db.document('users/$_userId/homes/$_homeId').setData({'secret':_userSecret,'homeId':_homeId});
-      await db.document('homes/$_homeId/occupants/$_userId').setData({'secret':_userSecret,'userId':_userId});
+      await db.document('users/$_userId/homes/$_homeId').setData({
+        'secret':_userSecret,
+        'homeId':_homeId,
+        'homeName': _homeName
+      });
+      await db.document('homes/$_homeId/occupants/$_userId').setData({
+        'secret':_userSecret,
+        'userId':_userId
+      });
       sendChirp(_chirpData);
     }catch (e) {
       print(e);

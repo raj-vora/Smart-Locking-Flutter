@@ -14,7 +14,7 @@ class Registration extends StatefulWidget {
 
 class _RegistrationState extends State<Registration> {
   final formKey = GlobalKey<FormState>();
-  String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId;
+  String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId, _homeName;
   Map<String, String> json;
 
   @override
@@ -53,7 +53,7 @@ class _RegistrationState extends State<Registration> {
     if(widget.auth.validateAndSave(formKey)){
       createJson();
       Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'register');
-      widget.auth.registerUser(_userId, _userSecret, _homeId, json, _chirpData);
+      widget.auth.registerUser(_userId, _userSecret, _homeId, json, _chirpData, _homeName);
     }
   }
 
@@ -82,12 +82,17 @@ class _RegistrationState extends State<Registration> {
                 height: double.infinity,
                 width: double.infinity,
                 decoration: kBackground,
-                padding: EdgeInsets.all(10.0),
+                padding: EdgeInsets.only(left: 10.0,right: 10.0,top: 10.0),
                 child: Form(
                   key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: logo() + buildInputs() + buildButtons()
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: logo() + buildInputs() + buildButtons()
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -102,18 +107,18 @@ class _RegistrationState extends State<Registration> {
     return [
       Column(
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-      Text(
-        'Registration',
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: 'OpenSans',
-          fontSize: 20.0,
-          fontWeight: FontWeight.bold,
-        ),
+        children: <Widget>[
+          Text(
+            'Registration',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'OpenSans',
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
-      ],
-    ),
     ];
   }
 
@@ -128,6 +133,7 @@ class _RegistrationState extends State<Registration> {
             decoration: kBoxDecorationStyle,
             height: 60.0,
             child: TextFormField(
+              textCapitalization: TextCapitalization.words,
               onSaved: (input) => _name = input,
               autofocus: true,
               style: TextStyle(
@@ -200,6 +206,34 @@ class _RegistrationState extends State<Registration> {
                   color: Colors.white,
                 ),
                 hintText: _emailId,
+                hintStyle: kHintTextStyle,
+              ),
+            ),
+          ),
+        ],
+      ),
+      SizedBox(height: 20.0,),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            alignment: Alignment.centerLeft,
+            decoration: kBoxDecorationStyle,
+            height: 60.0,
+            child: TextFormField(
+              onSaved: (input) => _homeName = input,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'OpenSans',
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.only(top: 14.0),
+                prefixIcon: Icon(
+                  Icons.home,
+                  color: Colors.white,
+                ),
+                hintText: 'Enter home name',
                 hintStyle: kHintTextStyle,
               ),
             ),
