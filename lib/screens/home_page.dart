@@ -43,6 +43,7 @@ class _HomePageState extends State<HomePage> {
         var localAuth = LocalAuthentication();
         authenticated = await localAuth.authenticateWithBiometrics(localizedReason: 'Please authenticate to continue');
         if(!authenticated){
+          widget.auth.createToast('Device user not authenticated');
           _signOut();
         }
       }
@@ -53,8 +54,6 @@ class _HomePageState extends State<HomePage> {
             userid = f['userId'];
             name = f['name'];
             phoneid = f['deviceId'];
-          }else{
-            print('user not found');
           }
         });
       });
@@ -79,7 +78,6 @@ class _HomePageState extends State<HomePage> {
         homeIds = homes.keys;
         homeNames = homes.values;
         _homeName = homeNames.first;
-        print('Homeid $homeIds; homename $homeNames');
       }
     });
   }
@@ -96,9 +94,9 @@ class _HomePageState extends State<HomePage> {
   void unlockDoor() async{
     String _userSecret;
     Firestore.instance.settings(persistenceEnabled: true);
-    homes.forEach((k,v) {
-      if(v == _homeName){
-        _homeId = k;
+    homes.forEach((id,name) {
+      if(name == _homeName){
+        _homeId = id;
       }
     });
     await db.document("users/$_userId/homes/$_homeId").get().then((snapshot){
@@ -106,11 +104,6 @@ class _HomePageState extends State<HomePage> {
     });
     Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'normal');
     widget.auth.sendChirp(_chirpData);
-  }
-
-  void addHome() {
-    widget.registerHome();
-    print('Clicked add Home');
   }
 
   @override
@@ -146,7 +139,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: Container(
         padding: EdgeInsets.only(right: 10.0, bottom: 10.0),
         child: FloatingActionButton(
-          onPressed: addHome,
+          onPressed: widget.registerHome,
           tooltip: 'Add Home',
           child: Icon(Icons.add, color: Colors.black,),
           backgroundColor: Colors.white,

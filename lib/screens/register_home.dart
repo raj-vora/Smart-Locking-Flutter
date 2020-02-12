@@ -14,7 +14,7 @@ class RegisterHome extends StatefulWidget {
 
 class _RegisterHomeState extends State<RegisterHome> {
   final formKey = GlobalKey<FormState>();
-  String _name, _mobileNumber, _userId, _emailId, _userSecret, _homeId, _homeName;
+  String _name, _userId,_userSecret, _homeId, _homeName;
   Map<String, String> json;
 
   @override
@@ -28,9 +28,7 @@ class _RegisterHomeState extends State<RegisterHome> {
   Future<void> initPlatformState() async {
     List id = await widget.auth.initRegistration();
     setState(() {
-      _emailId = id[2];
       _name = id[3];
-      _mobileNumber = id[4];
       _userId = id[5];
     });
   }

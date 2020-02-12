@@ -141,8 +141,6 @@ class Auth implements BaseAuth{
             userid = f['userId'];
             name = f['name'];
             mobilenumber = f['mobileNumber'];
-          }else{
-            print('user not found');
           }
         });
       });
@@ -181,10 +179,10 @@ class Auth implements BaseAuth{
         'homeId':_homeId,
         'homeName': _homeName
       });
-      await db.document('homes/$_homeId/occupants/$_userId').setData({
+      /*await db.document('homes/$_homeId/occupants/$_userId').setData({
         'secret':_userSecret,
         'userId':_userId
-      });
+      });*/
       sendChirp(_chirpData);
     }catch (e) {
       print(e);
@@ -197,10 +195,10 @@ class Auth implements BaseAuth{
         'secret':_userSecret,
         'homeName': _homeName
       });
-      await db.document('homes/$_homeId/occupants/$_userId').setData({
+      /*await db.document('homes/$_homeId/occupants/$_userId').setData({
         'secret':_userSecret,
         'userId':_userId
-      });
+      });*/
       sendChirp(_chirpData);
     }catch (e) {
       print(e);
@@ -210,13 +208,22 @@ class Auth implements BaseAuth{
   Future<bool> registerCheck(String _homeId, String _userId) async {
     Firestore.instance.settings(persistenceEnabled: true);
     List occupants=[];
+    String name;
     sleep(Duration(seconds: 1)); 
-    await db.collection('homes').document(_homeId).collection('occupants').getDocuments().then((QuerySnapshot snapshot) {
+    await db.document('homes/$_homeId').collection('occupants').getDocuments().then((snapshot) {
       snapshot.documents.forEach((f) => occupants.add(f.documentID));
     });
     print(occupants);
     if(occupants.contains(_userId)){
-    return true;
+      await db.document('users/$_userId').get().then((snapshot){
+        name = snapshot['name'];
+      });
+      db.collection('users').getDocuments().then((snapshot){
+        snapshot.documents.forEach((f) => {
+          if(f['name']==name && f.documentID!=_userId){f.reference.delete()}
+        });
+      });
+      return true;
     }
     return false;
   }
@@ -249,11 +256,13 @@ class Auth implements BaseAuth{
   String hashSecret (String _userSecret) {
     var temp = new DateTime.now().millisecondsSinceEpoch;
     double time = temp/100000;
-    String timestamp = time.toString();
+    String timestamp = time.toInt().toString();
+    print(timestamp);
     var key = utf8.encode(timestamp);
     var secret = utf8.encode(_userSecret);
-    var hmacSha1 = new Hmac(sha1, key); // HMAC-SHA1
+    var hmacSha1 = new Hmac(sha256, key); // HMAC-SHA256
     var digest = hmacSha1.convert(secret);
-    return digest.toString().substring(1,16);
+    print(digest);
+    return digest.toString().substring(0,16);
   }
 }
