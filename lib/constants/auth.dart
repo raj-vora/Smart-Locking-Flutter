@@ -21,6 +21,7 @@ abstract class BaseAuth {
   Future<String> getEmailId();
   Future<void> resetPassword(String _emailId);
   Future<void> signOut();
+  Future<void> deleteUser();
   
   //FORM VALIDATION FUNCTION
   bool validateAndSave(formKey);
@@ -35,7 +36,7 @@ abstract class BaseAuth {
   Future<List> initRegistration();
   Future<String> getDeviceId();
   List createUserId();
-  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData);
+  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData, String _deviceToken);
   void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData);
   Future<bool> registerCheck(String _homeId, String _userId);
   
@@ -86,6 +87,22 @@ class Auth implements BaseAuth{
 
   Future<void> signOut() async {
     return _firebaseAuth.signOut();
+  }
+
+  Future<void> deleteUser() async {
+    user = await _firebaseAuth.currentUser();
+    db.collection('users').getDocuments().then((snapshot){
+      String docId;
+      snapshot.documents.forEach((document) => {
+        if(document['authId']==user) {
+          db.collection('users').document(document.documentID).delete() 
+        }
+      });
+      print('Users data deleted');
+    });
+    await user.delete().then((value) => {
+      print('User Deleted')
+    });
   }
 
   //CHIRP FUNCTIONS
@@ -171,18 +188,17 @@ class Auth implements BaseAuth{
     return [id, secret];
   }
 
-  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData) async{
+  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData, String _deviceToken) async{
     try {
-      await db.collection('users').document(_userId).setData(json);
+      await db.document('users/$_userId').setData(json);
       await db.document('users/$_userId/homes/$_homeId').setData({
         'secret':_userSecret,
         'homeId':_homeId,
         'homeName': _homeName
       });
-      /*await db.document('homes/$_homeId/occupants/$_userId').setData({
-        'secret':_userSecret,
-        'userId':_userId
-      });*/
+      await db.document('homes/$_homeId/deviceTokens/$_deviceToken').setData({
+        'deviceToken':_deviceToken,
+      });
       sendChirp(_chirpData);
     }catch (e) {
       print(e);
@@ -213,7 +229,6 @@ class Auth implements BaseAuth{
     await db.document('homes/$_homeId').collection('occupants').getDocuments().then((snapshot) {
       snapshot.documents.forEach((f) => occupants.add(f.documentID));
     });
-    print(occupants);
     if(occupants.contains(_userId)){
       await db.document('users/$_userId').get().then((snapshot){
         name = snapshot['name'];

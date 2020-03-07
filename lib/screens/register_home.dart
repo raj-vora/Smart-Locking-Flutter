@@ -5,9 +5,8 @@ import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 
 class RegisterHome extends StatefulWidget {
-  RegisterHome({this.auth, this.onSignedIn});
+  RegisterHome({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedIn;
   @override
   _RegisterHomeState createState() => _RegisterHomeState();
 }
@@ -47,7 +46,7 @@ class _RegisterHomeState extends State<RegisterHome> {
     if(registered){
       print('User registered');
       widget.auth.createToast('User registered with device');
-      widget.onSignedIn();
+      Navigator.pop(context);
     }else{
       print('User not found');
       widget.auth.createToast('Try again');
@@ -55,7 +54,7 @@ class _RegisterHomeState extends State<RegisterHome> {
   }
 
   void cancelRegister() {
-    widget.onSignedIn();
+    Navigator.pop(context);
   }
 
   Widget build(BuildContext context) {

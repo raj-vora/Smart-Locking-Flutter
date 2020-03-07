@@ -4,9 +4,8 @@ import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn, this.register});
+  LoginPage({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedIn, register;
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -18,6 +17,11 @@ enum FormType{
 
 class _LoginPageState extends State<LoginPage> {
   
+  @override
+  void initState() {
+    super.initState();
+  }
+
   final formKey = GlobalKey<FormState>();
   String _email, _password;
   FormType _formType = FormType.login;
@@ -28,11 +32,11 @@ class _LoginPageState extends State<LoginPage> {
         if(_formType == FormType.login) {
           String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);
           print('Signed in: $userId');
-          widget.onSignedIn();
+          Navigator.pushNamed(context, 'home');
         } else{
           String userId = await widget.auth.createUserWithEmailAndPassword(_email, _password);
           print('Registered user: $userId');
-          widget.register();
+          Navigator.pushNamed(context, 'register');
         }
       }
       catch(e) {

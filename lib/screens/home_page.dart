@@ -5,12 +5,13 @@ import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({this.auth, this.onSignedOut, this.registerHome});
+  HomePage({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedOut;
-  final VoidCallback registerHome;
+  /*final VoidCallback onSignedOut;
+  final VoidCallback registerHome;*/
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -30,7 +31,18 @@ class _HomePageState extends State<HomePage> {
     getInfo();
     widget.auth.requestPermissions();
     widget.auth.initChirp();
-    _unlockbuttondisabled = false;
+    BackButtonInterceptor.add(myInterceptor);
+  }
+
+  @override
+  void dispose() {
+    BackButtonInterceptor.remove(myInterceptor);
+    super.dispose();
+  }
+
+  bool myInterceptor(bool stopDefaultButtonEvent) {
+    Navigator.popUntil(context, ModalRoute.withName('/'));
+    return true;
   }
 
   void getInfo() async {
@@ -85,7 +97,7 @@ class _HomePageState extends State<HomePage> {
   void _signOut() async {
     try {
       await widget.auth.signOut();
-      widget.onSignedOut();
+      Navigator.popUntil(context, ModalRoute.withName('/'));
     } catch (e) {
       print(e);
     }
@@ -104,6 +116,10 @@ class _HomePageState extends State<HomePage> {
     });
     Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'normal');
     widget.auth.sendChirp(_chirpData);
+  }
+
+  void registerHome() {
+    Navigator.pushNamed(context, 'registerHome');
   }
 
   @override
@@ -139,7 +155,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: Container(
         padding: EdgeInsets.only(right: 10.0, bottom: 10.0),
         child: FloatingActionButton(
-          onPressed: widget.registerHome,
+          onPressed: registerHome,//widget.registerHome,
           tooltip: 'Add Home',
           child: Icon(Icons.add, color: Colors.black,),
           backgroundColor: Colors.white,

@@ -3,19 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 import 'dart:typed_data';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 class Registration extends StatefulWidget {
-  Registration({this.auth,this.onSignedIn});
+  Registration({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedIn;
-  
   @override
   _RegistrationState createState() => _RegistrationState();
 }
 
 class _RegistrationState extends State<Registration> {
   final formKey = GlobalKey<FormState>();
-  String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId, _homeName;
+  String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId, _homeName, _deviceToken;
   Map<String, String> json;
+  final FirebaseMessaging messaging = FirebaseMessaging();
 
   @override
   void initState() {
@@ -23,7 +24,9 @@ class _RegistrationState extends State<Registration> {
     initPlatformState();
     widget.auth.requestPermissions();
     widget.auth.initChirp();
-
+    messaging.getToken().then((token) {
+      _deviceToken = token;
+    });
   }
 
   Future<void> initPlatformState() async {
@@ -53,7 +56,7 @@ class _RegistrationState extends State<Registration> {
     if(widget.auth.validateAndSave(formKey)){
       createJson();
       Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'register');
-      widget.auth.registerUser(_userId, _userSecret, _homeId, _homeName, json, _chirpData);
+      widget.auth.registerUser(_userId, _userSecret, _homeId, _homeName, json, _chirpData, _deviceToken);
     }
   }
 
@@ -62,11 +65,16 @@ class _RegistrationState extends State<Registration> {
     if(registered){
       print('user registered');
       widget.auth.createToast('User registered with device');
-      widget.onSignedIn();
+      Navigator.pushNamed(context, 'home');
     }else{
       print('user not found');
       widget.auth.createToast('Try again');
     }
+  }
+
+  void goToLogin() {
+    widget.auth.deleteUser();
+    Navigator.pop(context);
   }
   
   @override
@@ -281,8 +289,12 @@ class _RegistrationState extends State<Registration> {
       SizedBox(height:10.0),
       RaisedButton(
         child: Text('Continue'),
-        onPressed: goToHome,
-        
+        onPressed: goToHome,       
+      ),
+      SizedBox(height:10.0),
+      RaisedButton(
+        child: Text('Cancel'),
+        onPressed: goToLogin,       
       ),
     ];
   }
