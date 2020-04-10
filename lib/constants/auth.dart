@@ -12,6 +12,8 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 
 abstract class BaseAuth {
   //FIREBASE FUNCTIONS
@@ -21,6 +23,7 @@ abstract class BaseAuth {
   Future<String> getEmailId();
   Future<void> resetPassword(String _emailId);
   Future<void> signOut();
+  Future<void> deleteUser();
   
   //FORM VALIDATION FUNCTION
   bool validateAndSave(formKey);
@@ -35,8 +38,8 @@ abstract class BaseAuth {
   Future<List> initRegistration();
   Future<String> getDeviceId();
   List createUserId();
-  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData);
-  void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData);
+  void registerUser(String _userId, Map<String, String> json);
+  void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData, String _deviceToken);
   Future<bool> registerCheck(String _homeId, String _userId);
   
   //BOTTOM TOAST
@@ -44,6 +47,9 @@ abstract class BaseAuth {
   
   //HASHING FUNCTION
   String hashSecret (String _userSecret);
+  Future<String> getPrimaryUser(String homeId);
+  void sendMail(String primaryEmail, String userId, String otp);
+  void otpVerified(String homeId);
 }
 
 class Auth implements BaseAuth{
@@ -86,6 +92,21 @@ class Auth implements BaseAuth{
 
   Future<void> signOut() async {
     return _firebaseAuth.signOut();
+  }
+
+  Future<void> deleteUser() async {
+    user = await _firebaseAuth.currentUser();
+    print('User to be deleted $user');
+    db.collection('users').getDocuments().then((snapshot){
+      snapshot.documents.forEach((f) => {
+        if(f['authId']==user){
+          f.reference.delete()
+        }
+      });
+    });
+    await user.delete().then((value) => {
+      print('User Deleted')
+    });
   }
 
   //CHIRP FUNCTIONS
@@ -171,34 +192,21 @@ class Auth implements BaseAuth{
     return [id, secret];
   }
 
-  void registerUser(String _userId, String _userSecret, String _homeId, String _homeName, Map<String, String> json, Uint8List _chirpData) async{
+  void registerUser(String _userId, Map<String, String> json) async{
     try {
-      await db.collection('users').document(_userId).setData(json);
-      await db.document('users/$_userId/homes/$_homeId').setData({
-        'secret':_userSecret,
-        'homeId':_homeId,
-        'homeName': _homeName
-      });
-      /*await db.document('homes/$_homeId/occupants/$_userId').setData({
-        'secret':_userSecret,
-        'userId':_userId
-      });*/
-      sendChirp(_chirpData);
+      await db.document('users/$_userId').setData(json);
     }catch (e) {
       print(e);
     }
   }
 
-  void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData) async{
+  void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData, String _deviceToken) async{
     try {
       await db.document('users/$_userId/homes/$_homeId').setData({
         'secret':_userSecret,
         'homeName': _homeName
       });
-      /*await db.document('homes/$_homeId/occupants/$_userId').setData({
-        'secret':_userSecret,
-        'userId':_userId
-      });*/
+      await db.document('homes/$_homeId/deviceTokens/$_deviceToken').setData({});
       sendChirp(_chirpData);
     }catch (e) {
       print(e);
@@ -209,18 +217,18 @@ class Auth implements BaseAuth{
     Firestore.instance.settings(persistenceEnabled: true);
     List occupants=[];
     String name;
-    sleep(Duration(seconds: 1)); 
     await db.document('homes/$_homeId').collection('occupants').getDocuments().then((snapshot) {
       snapshot.documents.forEach((f) => occupants.add(f.documentID));
     });
-    print(occupants);
     if(occupants.contains(_userId)){
       await db.document('users/$_userId').get().then((snapshot){
         name = snapshot['name'];
       });
       db.collection('users').getDocuments().then((snapshot){
         snapshot.documents.forEach((f) => {
-          if(f['name']==name && f.documentID!=_userId){f.reference.delete()}
+          if(f['name']==name && f.documentID!=_userId){
+            f.reference.delete()
+          }
         });
       });
       return true;
@@ -233,7 +241,6 @@ class Auth implements BaseAuth{
     final form = formKey.currentState;
       if(form.validate()) {
         form.save();
-        print('Form Saved');
         return true;
       }
       return false;
@@ -265,4 +272,65 @@ class Auth implements BaseAuth{
     print(digest);
     return digest.toString().substring(0,16);
   }
+
+  Future<String> getPrimaryUser(String homeId) async{
+    String primaryEmail;
+    await db.document('homes/$homeId').get().then((snapshot) {
+      primaryEmail = snapshot['master_email'];
+    });
+    return primaryEmail;
+  }
+
+  void sendMail(String primaryEmail, String userId, String otp) async{
+    String username="intrusion.sls@gmail.com", password = "qwert123#", name, email, number;
+    final smtpServer = gmail(username, password);
+    await db.document('users/$userId').get().then((snapshot){
+        name = snapshot['name'];
+        email = snapshot['emailId'];
+        number = snapshot['mobileNumber'];
+    });
+    final message = Message()   
+    ..from = Address(username, 'Smart Locking System')
+    ..recipients.add(primaryEmail)
+    ..subject = 'A new user has registered, please validate.'
+    ..text =    'Username: $name\nEmail: $email\nContact: $number\nOTP for this user is: $otp';
+
+    try {
+    final sendReport = await send(message, smtpServer);
+    print('Message sent: ' + sendReport.toString());
+  } on MailerException catch (e) {
+    print(e.toString());
+    print('Message not sent.');
+    for (var p in e.problems) {
+      print('Problem: ${p.code}: ${p.msg}');
+    }
+  }
+  }
+
+  void otpVerified(String homeId) async{
+    String user = await currentUser();
+    await db.collection('users').getDocuments().then((snapshot) {
+      snapshot.documents.forEach((f) async {
+        if(f.data['authId']==user){
+          var userId = f.data['userId'];
+          await db.document('homes/$homeId/occupants/$userId').setData({'valid':true});
+          await db.document('homes/$homeId/occupants/$userId').get().then((snapshot){
+            print(snapshot['valid']);
+          });
+        }
+      });
+    });
+  }
+}
+
+class OtpArguments {
+  final String primaryUser;
+  final String otp;
+  final String homeId;
+  OtpArguments(this.primaryUser, this.otp, this.homeId);
+}
+
+class IntruderArguments {
+  final String homeId;
+  IntruderArguments(this.homeId);
 }

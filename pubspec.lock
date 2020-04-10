@@ -21,7 +21,14 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.4.0"
+    version: "2.3.0"
+  back_button_interceptor:
+    dependency: "direct main"
+    description:
+      name: back_button_interceptor
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "4.2.3"
   boolean_selector:
     dependency: transitive
     description:
@@ -106,6 +113,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.2"
+  firebase_messaging:
+    dependency: "direct main"
+    description:
+      name: firebase_messaging
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "6.0.3"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -158,20 +172,41 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.4.0+1"
+  logging:
+    dependency: transitive
+    description:
+      name: logging
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.11.4"
+  mailer:
+    dependency: "direct main"
+    description:
+      name: mailer
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.4"
   matcher:
     dependency: transitive
     description:
       name: matcher
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.6"
+    version: "0.12.5"
   meta:
     dependency: transitive
     description:
       name: meta
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.1.8"
+    version: "1.1.7"
+  mime:
+    dependency: transitive
+    description:
+      name: mime
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.9.6+3"
   path:
     dependency: transitive
     description:
@@ -200,6 +235,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.4.0"
+  platform:
+    dependency: transitive
+    description:
+      name: platform
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.2.1"
   quiver:
     dependency: transitive
     description:
@@ -253,7 +295,7 @@ packages:
       name: test_api
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.11"
+    version: "0.2.5"
   typed_data:
     dependency: transitive
     description:

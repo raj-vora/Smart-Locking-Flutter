@@ -2,28 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
-import 'dart:typed_data';
-class Registration extends StatefulWidget {
-  Registration({this.auth,this.onSignedIn});
+
+class RegisterUser extends StatefulWidget {
+  RegisterUser({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedIn;
-  
   @override
-  _RegistrationState createState() => _RegistrationState();
+  _RegisterUserState createState() => _RegisterUserState();
 }
 
-class _RegistrationState extends State<Registration> {
+class _RegisterUserState extends State<RegisterUser> {
   final formKey = GlobalKey<FormState>();
-  String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId, _userSecret, _homeId, _homeName;
+  String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId;
   Map<String, String> json;
 
   @override
   void initState() {
     super.initState();
     initPlatformState();
-    widget.auth.requestPermissions();
-    widget.auth.initChirp();
-
   }
 
   Future<void> initPlatformState() async {
@@ -37,36 +32,30 @@ class _RegistrationState extends State<Registration> {
 
   void createJson() {
     json = <String, String>{
-      'userId' : _userId,
       'authId' : _authId,
       'name' : _name,
       'deviceId' : _deviceId,
       'mobileNumber' : _mobileNumber,
       'emailId' : _emailId,
+      'userId': _userId
     };
   }
 
-  void registerWithDevice() async {
+  void goToRegisterHome() async {
     List user = widget.auth.createUserId();
     _userId = user[0];
-    _userSecret = user[1];
     if(widget.auth.validateAndSave(formKey)){
       createJson();
-      Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'register');
-      widget.auth.registerUser(_userId, _userSecret, _homeId, _homeName, json, _chirpData);
+      widget.auth.registerUser(_userId, json);
+      widget.auth.createToast('User Details Saved');
+      Navigator.pushNamed(context, 'registerHome');
     }
   }
 
-  void goToHome() async {
-    bool registered = await widget.auth.registerCheck(_homeId, _userId);
-    if(registered){
-      print('user registered');
-      widget.auth.createToast('User registered with device');
-      widget.onSignedIn();
-    }else{
-      print('user not found');
-      widget.auth.createToast('Try again');
-    }
+  void goToLogin() {
+    widget.auth.deleteUser();
+    Navigator.pop(context);
+    widget.auth.createToast('User Registration Cancelled');
   }
   
   @override
@@ -109,11 +98,11 @@ class _RegistrationState extends State<Registration> {
       crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Text(
-            'Registration',
+            'User Details',
             style: TextStyle(
               color: Colors.white,
               fontFamily: 'OpenSans',
-              fontSize: 20.0,
+              fontSize: 50.0,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -124,7 +113,7 @@ class _RegistrationState extends State<Registration> {
 
   List<Widget> buildInputs() {
     return[
-      SizedBox(height: 10.0),
+      SizedBox(height: 40.0),
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -133,6 +122,7 @@ class _RegistrationState extends State<Registration> {
             decoration: kBoxDecorationStyle,
             height: 60.0,
             child: TextFormField(
+              validator: (input) => input.length==0 ? 'Name cannot be blank': null,
               textCapitalization: TextCapitalization.words,
               onSaved: (input) => _name = input,
               autofocus: true,
@@ -212,62 +202,6 @@ class _RegistrationState extends State<Registration> {
           ),
         ],
       ),
-      SizedBox(height: 20.0,),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            alignment: Alignment.centerLeft,
-            decoration: kBoxDecorationStyle,
-            height: 60.0,
-            child: TextFormField(
-              onSaved: (input) => _homeName = input,
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'OpenSans',
-              ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.only(top: 14.0),
-                prefixIcon: Icon(
-                  Icons.home,
-                  color: Colors.white,
-                ),
-                hintText: 'Enter home name',
-                hintStyle: kHintTextStyle,
-              ),
-            ),
-          ),
-        ],
-      ),
-      SizedBox(height: 20.0,),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            alignment: Alignment.centerLeft,
-            decoration: kBoxDecorationStyle,
-            height: 60.0,
-            child: TextFormField(
-              onSaved: (input) => _homeId = input,
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'OpenSans',
-              ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.only(top: 14.0),
-                prefixIcon: Icon(
-                  Icons.home,
-                  color: Colors.white,
-                ),
-                hintText: 'Enter home ID',
-                hintStyle: kHintTextStyle,
-              ),
-            ),
-          ),
-        ],
-      ),
     ];
   }
 
@@ -275,14 +209,13 @@ class _RegistrationState extends State<Registration> {
     return [
       SizedBox(height:20.0),
       RaisedButton(
-        child: Text('Register with device'),
-        onPressed: registerWithDevice,
+        child: Text('Continue'),
+        onPressed: goToRegisterHome,
       ),
       SizedBox(height:10.0),
       RaisedButton(
-        child: Text('Continue'),
-        onPressed: goToHome,
-        
+        child: Text('Cancel'),
+        onPressed: goToLogin,       
       ),
     ];
   }

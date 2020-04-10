@@ -1,21 +1,23 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class RegisterHome extends StatefulWidget {
-  RegisterHome({this.auth, this.onSignedIn});
+  RegisterHome({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedIn;
   @override
   _RegisterHomeState createState() => _RegisterHomeState();
 }
 
 class _RegisterHomeState extends State<RegisterHome> {
   final formKey = GlobalKey<FormState>();
-  String _name, _userId,_userSecret, _homeId, _homeName;
+  String _name, _userId,_userSecret, _homeId, _homeName, _deviceToken;
   Map<String, String> json;
+  final FirebaseMessaging messaging = FirebaseMessaging();
 
   @override
   void initState() {
@@ -23,6 +25,9 @@ class _RegisterHomeState extends State<RegisterHome> {
     initPlatformState();
     widget.auth.requestPermissions();
     widget.auth.initChirp();
+    messaging.getToken().then((token) {
+      _deviceToken = token;
+    });
   }
 
   Future<void> initPlatformState() async {
@@ -38,16 +43,33 @@ class _RegisterHomeState extends State<RegisterHome> {
     _userSecret = user[1];
     if(widget.auth.validateAndSave(formKey)){
       Uint8List _chirpData = widget.auth.createChirp(_userId, _userSecret, 'register');
-      widget.auth.registerHome(_userId, _userSecret, _homeId,_homeName, _chirpData);
+      widget.auth.registerHome(_userId, _userSecret, _homeId,_homeName, _chirpData, _deviceToken);
     }
+  }
+
+  String createOtp() {
+    String otp='';
+    var random = new Random();
+    for(int i=0; i<6; i++){
+      otp += random.nextInt(9).toString();
+    }
+    print('OTP $otp');
+    return otp;
   }
 
   void goToHome() async {
     bool registered = await widget.auth.registerCheck(_homeId, _userId);
+    String primaryEmail = await widget.auth.getPrimaryUser(_homeId);
+    String otp = createOtp();
     if(registered){
-      print('User registered');
+      widget.auth.sendMail(primaryEmail, _userId, otp);
       widget.auth.createToast('User registered with device');
-      widget.onSignedIn();
+      Navigator.pushNamed(context, 'enterOtp', arguments: OtpArguments(
+        primaryEmail,
+        otp,
+        _homeId
+      )
+      );
     }else{
       print('User not found');
       widget.auth.createToast('Try again');
@@ -55,7 +77,7 @@ class _RegisterHomeState extends State<RegisterHome> {
   }
 
   void cancelRegister() {
-    widget.onSignedIn();
+    Navigator.pop(context);
   }
 
   Widget build(BuildContext context) {

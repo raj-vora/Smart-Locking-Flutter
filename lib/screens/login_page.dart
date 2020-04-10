@@ -1,12 +1,12 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn, this.register});
+  LoginPage({this.auth});
   final BaseAuth auth;
-  final VoidCallback onSignedIn, register;
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -21,6 +21,28 @@ class _LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   String _email, _password;
   FormType _formType = FormType.login;
+  bool passwordVisible;
+  final FirebaseMessaging messaging = FirebaseMessaging();
+  
+  @override
+  void initState() {
+    super.initState();
+    passwordVisible = false;
+    messaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        var datarec = message['data']['homeId'];
+        print("onMessage: $datarec");
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        var datarec = message['data']['homeId'];
+        print("onLaunch: $datarec");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        var datarec = message['data']['homeId'];
+        print("onResume: $datarec");
+      },
+    );
+  }
   
   void validateAndSubmit() async {
     if(widget.auth.validateAndSave(formKey)) {
@@ -28,11 +50,11 @@ class _LoginPageState extends State<LoginPage> {
         if(_formType == FormType.login) {
           String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);
           print('Signed in: $userId');
-          widget.onSignedIn();
+          Navigator.pushNamed(context, 'home');
         } else{
           String userId = await widget.auth.createUserWithEmailAndPassword(_email, _password);
           print('Registered user: $userId');
-          widget.register();
+          Navigator.pushNamed(context, 'registerUser');
         }
       }
       catch(e) {
@@ -172,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
           decoration: kBoxDecorationStyle,
           height: 60.0,
           child: TextFormField(
-            obscureText: true,
+            obscureText: passwordVisible,
             validator: (input) => input.length<8 ? 'Password cannot be less than 8 characters' : null,
             onSaved: (input) => _password = input,
             style: TextStyle(
@@ -188,6 +210,17 @@ class _LoginPageState extends State<LoginPage> {
               ),
               hintText: 'Enter your Password',
               hintStyle: kHintTextStyle,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  passwordVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off,
+                  color: Colors.white
+                ), 
+                onPressed: () {
+                  setState(() {passwordVisible = !passwordVisible;});
+                }
+              )
             ),
           ),
         ),
