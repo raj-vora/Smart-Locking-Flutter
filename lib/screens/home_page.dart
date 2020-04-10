@@ -23,7 +23,6 @@ class _HomePageState extends State<HomePage> {
   final db = Firestore.instance;
   final LocalAuthentication localAuth = LocalAuthentication();
   bool authenticated = false;
-  bool _unlockbuttondisabled = false;
 
   @override
   void initState() {
@@ -41,7 +40,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   bool myInterceptor(bool stopDefaultButtonEvent) {
-    Navigator.popUntil(context, ModalRoute.withName('/'));
+    Navigator.popUntil(context, ModalRoute.withName('login'));
+    widget.auth.createToast('User logged out');
     return true;
   }
 
@@ -70,6 +70,7 @@ class _HomePageState extends State<HomePage> {
         });
       });
       currentphoneid = await widget.auth.getDeviceId();
+      print(currentphoneid);
       if(currentphoneid != phoneid){
         widget.auth.createToast('User already logged in on another device');
         _signOut();
@@ -97,7 +98,7 @@ class _HomePageState extends State<HomePage> {
   void _signOut() async {
     try {
       await widget.auth.signOut();
-      Navigator.popUntil(context, ModalRoute.withName('/'));
+      Navigator.popUntil(context, ModalRoute.withName('login'));
     } catch (e) {
       print(e);
     }
@@ -249,9 +250,8 @@ class _HomePageState extends State<HomePage> {
       SizedBox(height: 100,),
       RaisedButton(
         child: Text('Unlock Door'),
-        onPressed: _unlockbuttondisabled ? null : unlockDoor,                      
+        onPressed: unlockDoor,                      
       ),
     ];
   }
-
 }
