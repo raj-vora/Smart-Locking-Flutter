@@ -23,7 +23,6 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: 
-  imei_plugin: 
   firebase_auth: 
   cloud_firestore: 
   firebase_messaging: 
@@ -44,7 +43,6 @@ flutter_icons:
   image_path: "icon/icon.jpg"
   android: true
   ios: true
-
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

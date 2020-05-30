@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
@@ -12,6 +13,7 @@ class RegisterUser extends StatefulWidget {
 
 class _RegisterUserState extends State<RegisterUser> {
   final formKey = GlobalKey<FormState>();
+  final FirebaseMessaging messaging = FirebaseMessaging();
   String _name, _deviceId, _mobileNumber, _authId, _userId, _emailId;
   Map<String, String> json;
 

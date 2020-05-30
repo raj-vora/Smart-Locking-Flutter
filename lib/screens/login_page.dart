@@ -17,12 +17,11 @@ enum FormType{
 }
 
 class _LoginPageState extends State<LoginPage> {
-  
+  final FirebaseMessaging messaging = FirebaseMessaging();
   final formKey = GlobalKey<FormState>();
   String _email, _password;
   FormType _formType = FormType.login;
   bool passwordVisible;
-  final FirebaseMessaging messaging = FirebaseMessaging();
   
   @override
   void initState() {
@@ -30,16 +29,22 @@ class _LoginPageState extends State<LoginPage> {
     passwordVisible = false;
     messaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        var datarec = message['data']['homeId'];
-        print("onMessage: $datarec");
+        var homeId = message['data']['homeId'];
+        var userId = message['data']['userId'];
+        print("onMessage: $homeId");
+        print("onMessage: $userId");
       },
       onLaunch: (Map<String, dynamic> message) async {
-        var datarec = message['data']['homeId'];
-        print("onLaunch: $datarec");
+        var homeId = message['data']['homeId'];
+        var userId = message['data']['userId'];
+        print("onLaunch: $homeId");
+        print("onLaunch: $userId");
       },
       onResume: (Map<String, dynamic> message) async {
-        var datarec = message['data']['homeId'];
-        print("onResume: $datarec");
+        var homeId = message['data']['homeId'];
+        var userId = message['data']['userId'];
+        print("onResume: $homeId");
+        print("onResume: $userId");
       },
     );
   }

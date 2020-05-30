@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
-import 'package:imei_plugin/imei_plugin.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:chirp_flutter/chirp_flutter.dart';
 import 'dart:typed_data';
@@ -36,7 +36,6 @@ abstract class BaseAuth {
   
   //REGISTRATION FUNCTION
   Future<List> initRegistration();
-  Future<String> getDeviceId();
   List createUserId();
   void registerUser(String _userId, Map<String, String> json);
   void registerHome(String _userId, String _userSecret, String _homeId, String _homeName, Uint8List _chirpData, String _deviceToken);
@@ -151,9 +150,12 @@ class Auth implements BaseAuth{
   Future<List> initRegistration() async{
     Firestore.instance.settings(persistenceEnabled: true);
     String idunique, user, email, name, mobilenumber, userid;
+    final FirebaseMessaging messaging = FirebaseMessaging();
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      idunique = await getDeviceId();
+      messaging.getToken().then((token) {
+        idunique = token;
+      });
       user  = await currentUser();
       email = await getEmailId();
       await db.collection('users').getDocuments().then((snapshot){
@@ -169,11 +171,6 @@ class Auth implements BaseAuth{
       print(e);
     }
     return [idunique, user, email, name, mobilenumber, userid];
-  }
-
-  Future<String> getDeviceId() async{
-  String deviceId = await ImeiPlugin.getId();
-  return deviceId;
   }
 
   List createUserId() {
@@ -296,15 +293,15 @@ class Auth implements BaseAuth{
     ..text =    'Username: $name\nEmail: $email\nContact: $number\nOTP for this user is: $otp';
 
     try {
-    final sendReport = await send(message, smtpServer);
-    print('Message sent: ' + sendReport.toString());
-  } on MailerException catch (e) {
-    print(e.toString());
-    print('Message not sent.');
-    for (var p in e.problems) {
-      print('Problem: ${p.code}: ${p.msg}');
+      final sendReport = await send(message, smtpServer);
+      print('Message sent: ' + sendReport.toString());
+    } on MailerException catch (e) {
+      print(e.toString());
+      print('Message not sent.');
+      for (var p in e.problems) {
+        print('Problem: ${p.code}: ${p.msg}');
+      }
     }
-  }
   }
 
   void otpVerified(String homeId) async{
@@ -331,6 +328,6 @@ class OtpArguments {
 }
 
 class IntruderArguments {
-  final String homeId;
-  IntruderArguments(this.homeId);
+  final String id;
+  IntruderArguments(this.id);
 }

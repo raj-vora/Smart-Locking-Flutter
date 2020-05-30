@@ -26,6 +26,8 @@ class _EnterOtpState extends State<EnterOtp> {
         widget.auth.createToast('OTP verified');
         widget.auth.otpVerified(homeId);
         Navigator.pushNamed(context, 'home');
+      } else {
+        print(otp);
       }
     }
   }
