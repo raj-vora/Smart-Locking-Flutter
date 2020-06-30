@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_lock/constants/auth.dart';
 import 'package:smart_lock/constants/ui_constants.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class RegisterHome extends StatefulWidget {
   RegisterHome({this.auth});
@@ -17,7 +16,6 @@ class _RegisterHomeState extends State<RegisterHome> {
   final formKey = GlobalKey<FormState>();
   String _name, _userId,_userSecret, _homeId, _homeName, _deviceToken;
   Map<String, String> json;
-  final FirebaseMessaging messaging = FirebaseMessaging();
 
   @override
   void initState() {
@@ -25,14 +23,12 @@ class _RegisterHomeState extends State<RegisterHome> {
     initPlatformState();
     widget.auth.requestPermissions();
     widget.auth.initChirp();
-    messaging.getToken().then((token) {
-      _deviceToken = token;
-    });
   }
 
   Future<void> initPlatformState() async {
     List id = await widget.auth.initRegistration();
     setState(() {
+      _deviceToken = id[0];
       _name = id[3];
       _userId = id[5];
     });

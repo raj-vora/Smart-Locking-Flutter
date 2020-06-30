@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -10,14 +11,13 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 class HomePage extends StatefulWidget {
   HomePage({this.auth});
   final BaseAuth auth;
-  /*final VoidCallback onSignedOut;
-  final VoidCallback registerHome;*/
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   String _userId, _userName='User', _homeId, _homeName;
+  final FirebaseMessaging messaging = FirebaseMessaging();
   Map<String, String> homes={};
   dynamic homeIds, homeNames;
   final db = Firestore.instance;
@@ -69,8 +69,9 @@ class _HomePageState extends State<HomePage> {
           }
         });
       });
-      currentphoneid = await widget.auth.getDeviceId();
-      print(currentphoneid);
+      await messaging.getToken().then((token) {
+        currentphoneid = token;
+      });
       if(currentphoneid != phoneid){
         widget.auth.createToast('User already logged in on another device');
         _signOut();
